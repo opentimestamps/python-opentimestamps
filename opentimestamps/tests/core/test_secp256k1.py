@@ -9,6 +9,7 @@
 # modified, propagated, or distributed except according to the terms contained
 # in the LICENSE file.
 
+import hashlib
 import binascii
 import unittest
 
@@ -20,7 +21,7 @@ class Test_Secp256k1(unittest.TestCase):
         gen = SECP256K1_GEN
         encode = gen.encode()
         self.assertEqual(encode, binascii.unhexlify("0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"))
-        gen2 = Point().decode(encode)
+        gen2 = Point.decode(encode)
         self.assertEqual(gen, gen2)
 
     def test_pinv(self):
@@ -98,4 +99,10 @@ class Test_Secp256k1(unittest.TestCase):
         self.assertEqual(p1.scalar_mul(-2), np2)
         self.assertEqual(p2.scalar_mul(-1), np2)
         self.assertEqual(p1.scalar_mul(3), p3)
+
+    def test_op_signtocontract(self):
+        pt_encode = binascii.unhexlify("0308aec434612f56df3f02c4e678260424415882ebd3efc16d52e3f9c1e39afdb0")
+        msg = hashlib.sha256("This is andytoshi on 2017-05-16 21:30 UTC".encode()).digest()
+        result = binascii.unhexlify("d386ef692770fcecad43362cf541858662e4ebe31d3ad04d196f94168897947a")
+        self.assertEqual(OpSecp256k1Commitment(pt_encode)(msg), result)
 

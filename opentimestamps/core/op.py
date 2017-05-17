@@ -347,3 +347,6 @@ class OpKECCAK256(UnaryOp):
         r = sha3.keccak_256(bytes(msg)).digest()
         assert len(r) == self.DIGEST_LENGTH
         return r
+
+from opentimestamps.core.secp256k1 import OpSecp256k1Commitment
+

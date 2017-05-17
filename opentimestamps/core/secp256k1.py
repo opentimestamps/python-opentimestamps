@@ -9,6 +9,27 @@
 # modified, propagated, or distributed except according to the terms contained
 # in the LICENSE file.
 
+import hashlib
+
+from opentimestamps.core.op import BinaryOp, MsgValueError
+
+@BinaryOp._register_op
+class OpSecp256k1Commitment(BinaryOp):
+    """Execute the map commit -> [P + sha256(P||commit)G]_x for a given secp256k1 point P"""
+    TAG = b'\x09'
+    TAG_NAME = 'secp256k1commitment'
+
+    def _do_op_call(self, msg):
+        hasher = hashlib.sha256()
+        pt = Point.decode(self[0])
+        hasher.update(pt.encode())
+        hasher.update(msg)
+        tweak = int.from_bytes(hasher.digest(), 'big')
+        tweak_pt = SECP256K1_GEN.scalar_mul(tweak)
+        final_pt = pt.add(tweak_pt)
+        return final_pt.x.to_bytes(32, 'big')
+
+
 ## What follows is a lot of inefficient but explicit secp256k1 math
 class Point(object):
     inf = True

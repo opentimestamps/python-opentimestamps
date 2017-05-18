@@ -104,5 +104,5 @@ class Test_Secp256k1(unittest.TestCase):
         pt_encode = binascii.unhexlify("0308aec434612f56df3f02c4e678260424415882ebd3efc16d52e3f9c1e39afdb0")
         msg = hashlib.sha256("This is andytoshi on 2017-05-16 21:30 UTC".encode()).digest()
         result = binascii.unhexlify("d386ef692770fcecad43362cf541858662e4ebe31d3ad04d196f94168897947a")
-        self.assertEqual(OpSecp256k1Commitment(pt_encode)(msg), result)
+        self.assertEqual(OpSecp256k1Commitment()(pt_encode + msg), result)
 

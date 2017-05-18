@@ -11,19 +11,28 @@
 
 import hashlib
 
-from opentimestamps.core.op import BinaryOp, MsgValueError
+from opentimestamps.core.op import UnaryOp, MsgValueError
 
-@BinaryOp._register_op
-class OpSecp256k1Commitment(BinaryOp):
-    """Execute the map commit -> [P + sha256(P||commit)G]_x for a given secp256k1 point P"""
+@UnaryOp._register_op
+class OpSecp256k1Commitment(UnaryOp):
+    """Map (P || commit) -> [P + sha256(P||commit)G]_x for a given secp256k1 point P
+
+    This is a unary op rather than a binary op to allow timestamps to also
+    timestamp the point itself; in the event of an ECC break this might be
+    relevant.
+    """
     TAG = b'\x09'
     TAG_NAME = 'secp256k1commitment'
 
     def _do_op_call(self, msg):
+        if len(msg) < 33:
+            raise MsgValueError("Missing secp256k1 point")
+
+        pt = Point.decode(msg[0:33])
+
         hasher = hashlib.sha256()
-        pt = Point.decode(self[0])
         hasher.update(pt.encode())
-        hasher.update(msg)
+        hasher.update(msg[33:])
         tweak = int.from_bytes(hasher.digest(), 'big')
         tweak_pt = SECP256K1_GEN.scalar_mul(tweak)
         final_pt = pt.add(tweak_pt)

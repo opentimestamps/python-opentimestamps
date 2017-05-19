@@ -19,7 +19,8 @@ class OpSecp256k1Commitment(UnaryOp):
 
     This is a unary op rather than a binary op to allow timestamps to also
     timestamp the point itself; in the event of an ECC break this might be
-    relevant.
+    relevant. Such a break would not affect the integrity of the commitment,
+    but knowledge of the underlying key may be interesting in its own right.
     """
     TAG = b'\x09'
     TAG_NAME = 'secp256k1commitment'

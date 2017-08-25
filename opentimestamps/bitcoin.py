@@ -72,14 +72,14 @@ def make_timestamp_from_block(digest, block, blockheight, *, max_tx_size=1000):
     prefix_stamp = digest_timestamp.ops.add(OpPrepend(prefix))
     txid_stamp = cat_sha256d(prefix_stamp, suffix)
 
-    assert commitment_tx.GetHash() == txid_stamp.msg
+    assert commitment_tx.GetTxid() == txid_stamp.msg
 
     # Create the txid list, with our commitment txid op in the appropriate
     # place
     block_txid_stamps = []
     for tx in block.vtx:
-        if tx.GetHash() != txid_stamp.msg:
-            block_txid_stamps.append(Timestamp(tx.GetHash()))
+        if tx.GetTxid() != txid_stamp.msg:
+            block_txid_stamps.append(Timestamp(tx.GetTxid()))
         else:
             block_txid_stamps.append(txid_stamp)
 

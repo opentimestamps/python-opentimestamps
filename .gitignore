@@ -3,7 +3,8 @@
 local*.cfg
 
 build/
-python_opentimestamps.egg-info/
+dist/
+opentimestamps.egg-info/
 
 #Idea IDE
 .idea/

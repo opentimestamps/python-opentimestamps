@@ -43,7 +43,7 @@ def make_timestamp_from_block(digest, block, blockheight, *, max_tx_size=1000):
     To limit the maximum size of proof, transactions larger than `max_tx_size`
     are ignored.
 
-    Returns a timestamp for that message on success, None on failure
+    Returns a timestamp for that message on success, None on failure.
     """
 
     # Note how strategy changes if we add SHA256 midstate support

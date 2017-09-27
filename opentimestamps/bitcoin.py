@@ -13,7 +13,6 @@ from opentimestamps.core.timestamp import Timestamp, cat_sha256d
 from opentimestamps.core.op import OpPrepend
 from opentimestamps.core.notary import BitcoinBlockHeaderAttestation
 
-
 def __make_btc_block_merkle_tree(blk_txids):
     assert len(blk_txids) > 0
 
@@ -34,13 +33,20 @@ def __make_btc_block_merkle_tree(blk_txids):
 
 
 def make_timestamp_from_block(digest, block, blockheight, *, max_tx_size=1000):
-    """Make a timestamp for a digest from a block
+    """Make a timestamp for a message in a block
 
-    Returns a timestamp for that digest on success, None on failure
+    Every transaction within the block is serialized and checked to see if the
+    raw serialized bytes contain the message. If one or more transactions do,
+    the smallest transaction is used to create a timestamp proof for that
+    specific message to the block header.
+
+    To limit the maximum size of proof, transactions larger than `max_tx_size`
+    are ignored.
+
+    Returns a timestamp for that message on success, None on failure
     """
-    # Find the smallest transaction containing the root digest
 
-    # FIXME: note how strategy changes once we add SHA256 midstate support
+    # Note how strategy changes if we add SHA256 midstate support
     len_smallest_tx_found = max_tx_size + 1
     commitment_tx = None
     prefix = None

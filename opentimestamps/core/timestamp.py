@@ -356,6 +356,8 @@ def cat_then_unary_op(unary_op_cls, left, right):
     left_append_stamp = left.ops.add(OpAppend(right.msg))
     right_prepend_stamp = right.ops.add(OpPrepend(left.msg))
 
+    assert(left_append_stamp == right_prepend_stamp)
+
     # Left and right should produce the same thing, so we can set the timestamp
     # of the left to the right.
     left.ops[OpAppend(right.msg)] = right_prepend_stamp

@@ -295,3 +295,56 @@ class BitcoinBlockHeaderAttestation(TimeAttestation):
         height = ctx.read_varuint()
         return BitcoinBlockHeaderAttestation(height)
 
+class BitcoinTestnet3BlockHeaderAttestation(TimeAttestation):
+    """Signed by the Bitcoin Testnet3 blockchain
+
+    This shouldn't be used in production, as the amount of mining on 
+    testnet is so low it would be easy to use obsolete miners to rewrite history.
+    However it is surprinsingly useful for developing OTS-based applications.
+    """
+
+    TAG = bytes.fromhex('0588960d73d71902')
+
+    def __init__(self, height):
+        self.height = height
+
+    def __eq__(self, other):
+        if other.__class__ is BitcoinTestnet3BlockHeaderAttestation:
+            return self.height == other.height
+        else:
+            super().__eq__(other)
+
+    def __lt__(self, other):
+        if other.__class__ is BitcoinTestnet3BlockHeaderAttestation:
+            return self.height < other.height
+
+        else:
+            super().__eq__(other)
+
+    def __hash__(self):
+        return hash(self.height)
+
+    def verify_against_blockheader(self, digest, block_header):
+        """Verify attestation against a block header
+
+        Returns the block time on success; raises VerificationError on failure.
+        """
+
+        if len(digest) != 32:
+            raise VerificationError("Expected digest with length 32 bytes; got %d bytes" % len(digest))
+        elif digest != block_header.hashMerkleRoot:
+            raise VerificationError("Digest does not match merkleroot")
+
+        return block_header.nTime
+
+    def __repr__(self):
+        return 'BitcoinTestnet3BlockHeaderAttestation(%r)' % self.height
+
+    def _serialize_payload(self, ctx):
+        ctx.write_varuint(self.height)
+
+    @classmethod
+    def deserialize(cls, ctx):
+        height = ctx.read_varuint()
+        return BitcoinTestnet3BlockHeaderAttestation(height)
+

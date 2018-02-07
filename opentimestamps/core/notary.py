@@ -295,3 +295,65 @@ class BitcoinBlockHeaderAttestation(TimeAttestation):
         height = ctx.read_varuint()
         return BitcoinBlockHeaderAttestation(height)
 
+class LitecoinBlockHeaderAttestation(TimeAttestation):
+    """Signed by the Litecoin blockchain
+
+    Identical in design to the BitcoinBlockHeaderAttestation.
+
+    There are very few advantages to using altcoins attestations, primarly because
+    the resources spent to secure those chains are much lower, but also because
+    even if the fees are sometimes lower on other chain, the marginal cost
+    of an attestation on OpenTimestamps is always zero.
+
+    However, a highly motivated calendar server could have an attestion transaction 
+    in every block every 2.5 minutes on Litecoin, which provides a more
+    granular proof of existence than Bitcoin. A user could have a highly secure 
+    attestation the bitcoin blockchain and a precise one on an altchain such as Litecoin.
+    
+    """
+
+    TAG = bytes.fromhex('06869a0d73d71b45')
+
+    def __init__(self, height):
+        self.height = height
+
+    def __eq__(self, other):
+        if other.__class__ is LitecoinBlockHeaderAttestation:
+            return self.height == other.height
+        else:
+            super().__eq__(other)
+
+    def __lt__(self, other):
+        if other.__class__ is LitecoinBlockHeaderAttestation:
+            return self.height < other.height
+
+        else:
+            super().__eq__(other)
+
+    def __hash__(self):
+        return hash(self.height)
+
+    def verify_against_blockheader(self, digest, block_header):
+        """Verify attestation against a block header
+
+        Returns the block time on success; raises VerificationError on failure.
+        """
+
+        if len(digest) != 32:
+            raise VerificationError("Expected digest with length 32 bytes; got %d bytes" % len(digest))
+        elif digest != block_header.hashMerkleRoot:
+            raise VerificationError("Digest does not match merkleroot")
+
+        return block_header.nTime
+
+    def __repr__(self):
+        return 'LitecoinBlockHeaderAttestation(%r)' % self.height
+
+    def _serialize_payload(self, ctx):
+        ctx.write_varuint(self.height)
+
+    @classmethod
+    def deserialize(cls, ctx):
+        height = ctx.read_varuint()
+        return LitecoinBlockHeaderAttestation(height)
+

@@ -306,9 +306,9 @@ class LitecoinBlockHeaderAttestation(TimeAttestation):
     of an attestation on OpenTimestamps is always zero.
 
     However, a highly motivated calendar server could have an attestion transaction 
-    in every block every 2.5 minutes on Litecoin, which provides a more
-    granular proof of existence than Bitcoin. A user could have a highly secure 
-    attestation the bitcoin blockchain and a precise one on an altchain such as Litecoin.
+    in every block every 2.5 minutes on Litecoin, which provides a faster confirmation
+    than Bitcoin. A user could fetch a highly secure attestation the bitcoin blockchain 
+    and immediately get one on an altchain such as Litecoin.
     
     """
 

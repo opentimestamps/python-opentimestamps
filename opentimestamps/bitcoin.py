@@ -1,4 +1,4 @@
-# Copyright (C) 2016 The OpenTimestamps developers
+# Copyright (C) 2016-2018 The OpenTimestamps developers
 #
 # This file is part of python-opentimestamps.
 #
@@ -52,7 +52,7 @@ def make_timestamp_from_block(digest, block, blockheight, *, max_tx_size=1000):
     prefix = None
     suffix = None
     for tx in block.vtx:
-        serialized_tx = tx.serialize()
+        serialized_tx = tx.serialize(params={'include_witness':False})
 
         if len(serialized_tx) > len_smallest_tx_found:
             continue

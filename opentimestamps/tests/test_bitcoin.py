@@ -1,4 +1,4 @@
-# Copyright (C) 2016 The OpenTimestamps developers
+# Copyright (C) 2016-2018 The OpenTimestamps developers
 #
 # This file is part of python-opentimestamps.
 #
@@ -48,3 +48,15 @@ class Test_make_timestamp_from_block(unittest.TestCase):
         # Check that size limit is respected
         root_stamp = make_timestamp_from_block(digest, block, 586, max_tx_size=1)
         self.assertEqual(root_stamp, None)
+
+    def test_segwit(self):
+        # regtest block, with a segwit tx
+        block = CBlock.deserialize(x('0000002060f13fc5bbde8de36f8896a70071d53494f14bcda132968205db08be651f4402fba57b59d485e5446f674cb42917d85f370ee60bbe8a4149ca9d2d236bb2a5286645835affff7f200000000002020000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff050281000101ffffffff02b8f2052a01000000232103c94c88a631f2286bf1404f550742cec64df1701e8374a17426d8375f6fbbc188ac0000000000000000266a24aa21a9edb6e18554334fb03b3ca9e17ef71614853731fffee928f9f63be4de7052b9b1c3012000000000000000000000000000000000000000000000000000000000000000000000000001000000000101bb7e38e3e5bf1ef124e96342cfdd6e4ac8e155a19d845bca68af1c2db420e3a5000000001716001457c8e57a3bdfd4e586fcbecabd958e5f7d5bae49fdffffff0290b1a43e1e00000017a914f55b72549c205fdf490ce331ac3f95ad4f7b2a24870000000000000000226a208e16cdc4bc8b6aae0a217d30662bf5bb7b732b0751746f587b411fecbc41574e02483045022100e6cb9807f0125e6c9bda818b280103177ad4956d8efd5d689d005d95e8d096bf0220138fce520f4cfbb255e0f7c56183002a1f489bbed7eebfa75bf7e9995533d3dc012103e7c5963292645605207996004489e09edb79edfd6b7d7e45562acb064ae9628380000000'))
+
+        # satoshi's pubkey
+        digest = x('8e16cdc4bc8b6aae0a217d30662bf5bb7b732b0751746f587b411fecbc41574e')
+        root_stamp = make_timestamp_from_block(digest, block, 129)
+
+        (msg, attestation) = tuple(root_stamp.all_attestations())[0]
+        self.assertEqual(msg, lx('28a5b26b232d9dca49418abe0be60e375fd81729b44c676f44e585d4597ba5fb')) # merkleroot
+        self.assertEqual(attestation.height, 129)

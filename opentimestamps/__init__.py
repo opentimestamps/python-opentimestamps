@@ -1,4 +1,4 @@
-# Copyright (C) 2017 The OpenTimestamps developers
+# Copyright (C) 2018 The OpenTimestamps developers
 #
 # This file is part of python-opentimestamps.
 #
@@ -9,4 +9,4 @@
 # modified, propagated, or distributed except according to the terms contained
 # in the LICENSE file.
 
-__version__ = "0.2.0.1"
+__version__ = "0.2.1"

@@ -1,6 +1,6 @@
 # python-opentimestamps release notes
 
-## v0.2.1dev
+## v0.2.1
 
 Fixed `make_timestamp_from_block()` w/ blocks containing segwit transactions.
 

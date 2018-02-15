@@ -299,17 +299,6 @@ class LitecoinBlockHeaderAttestation(TimeAttestation):
     """Signed by the Litecoin blockchain
 
     Identical in design to the BitcoinBlockHeaderAttestation.
-
-    There are very few advantages to using altcoins attestations, primarly because
-    the resources spent to secure those chains are much lower, but also because
-    even if the fees are sometimes lower on other chain, the marginal cost
-    of an attestation on OpenTimestamps is always zero.
-
-    However, a highly motivated calendar server could have an attestion transaction 
-    in every block every 2.5 minutes on Litecoin, which provides a faster confirmation
-    than Bitcoin. A user could fetch a highly secure attestation the bitcoin blockchain 
-    and immediately get one on an altchain such as Litecoin.
-    
     """
 
     TAG = bytes.fromhex('06869a0d73d71b45')

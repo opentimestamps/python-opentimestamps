@@ -60,3 +60,18 @@ class Test_make_timestamp_from_block(unittest.TestCase):
         (msg, attestation) = tuple(root_stamp.all_attestations())[0]
         self.assertEqual(msg, lx('28a5b26b232d9dca49418abe0be60e375fd81729b44c676f44e585d4597ba5fb')) # merkleroot
         self.assertEqual(attestation.height, 129)
+
+    def test_bench(self):
+        # This is not a proper test but a benchmark, to check the precomputing of serialized tx once allow
+        # to call make_timestamp_from_block many times without waiting too much
+        try:
+            proxy = bitcoin.rpc.Proxy()
+            block = proxy.getblock(lx('0000000000000000001d34d4434c1223a5b9b7298714cafa85cb1b139b3d9f1b'))
+            digest = lx('0000000000000000001d34d4434c1223a5b9b7298714cafa85cb1b139b3d9f1b')
+            serde_txs = []
+            for tx in block.vtx:
+                serde_txs.append((tx, tx.serialize()))
+            for i in range(0, 300):
+                make_timestamp_from_block(digest, block, 0, serde_txs=serde_txs)
+        except:
+            pass

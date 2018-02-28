@@ -32,7 +32,7 @@ def __make_btc_block_merkle_tree(blk_txids):
     return digests[0]
 
 
-def make_timestamp_from_block(digest, block, blockheight, *, max_tx_size=1000):
+def make_timestamp_from_block(digest, block, blockheight, *, max_tx_size=1000, serde_txs=None):
     """Make a timestamp for a message in a block
 
     Every transaction within the block is serialized and checked to see if the
@@ -51,8 +51,14 @@ def make_timestamp_from_block(digest, block, blockheight, *, max_tx_size=1000):
     commitment_tx = None
     prefix = None
     suffix = None
-    for tx in block.vtx:
-        serialized_tx = tx.serialize(params={'include_witness':False})
+
+    # Populate serde_txs if it is not already precomputed
+    if serde_txs is None:
+        serde_txs = []
+        for tx in block.vtx:
+            serde_txs.append((tx, tx.serialize(params={'include_witness':False})))
+
+    for (tx, serialized_tx) in serde_txs:
 
         if len(serialized_tx) > len_smallest_tx_found:
             continue

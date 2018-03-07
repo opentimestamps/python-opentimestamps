@@ -79,6 +79,8 @@ class TimeAttestation:
             r = PendingAttestation.deserialize(payload_ctx)
         elif tag == BitcoinBlockHeaderAttestation.TAG:
             r = BitcoinBlockHeaderAttestation.deserialize(payload_ctx)
+        elif tag == LitecoinBlockHeaderAttestation.TAG:
+            r = LitecoinBlockHeaderAttestation.deserialize(payload_ctx)
         elif tag == opentimestamps.core.dubious.notary.EthereumBlockHeaderAttestation.TAG:
             r = opentimestamps.core.dubious.notary.EthereumBlockHeaderAttestation.deserialize(payload_ctx)
         else:
@@ -325,15 +327,11 @@ class LitecoinBlockHeaderAttestation(TimeAttestation):
     def verify_against_blockheader(self, digest, block_header):
         """Verify attestation against a block header
 
-        Returns the block time on success; raises VerificationError on failure.
+        Not implemented here until there is a well-maintained Litecoin 
+        python library
         """
+        raise NotImplementedError()
 
-        if len(digest) != 32:
-            raise VerificationError("Expected digest with length 32 bytes; got %d bytes" % len(digest))
-        elif digest != block_header.hashMerkleRoot:
-            raise VerificationError("Digest does not match merkleroot")
-
-        return block_header.nTime
 
     def __repr__(self):
         return 'LitecoinBlockHeaderAttestation(%r)' % self.height

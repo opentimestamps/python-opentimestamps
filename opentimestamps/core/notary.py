@@ -79,6 +79,8 @@ class TimeAttestation:
             r = PendingAttestation.deserialize(payload_ctx)
         elif tag == BitcoinBlockHeaderAttestation.TAG:
             r = BitcoinBlockHeaderAttestation.deserialize(payload_ctx)
+        elif tag == LitecoinBlockHeaderAttestation.TAG:
+            r = LitecoinBlockHeaderAttestation.deserialize(payload_ctx)
         elif tag == opentimestamps.core.dubious.notary.EthereumBlockHeaderAttestation.TAG:
             r = opentimestamps.core.dubious.notary.EthereumBlockHeaderAttestation.deserialize(payload_ctx)
         else:
@@ -294,4 +296,51 @@ class BitcoinBlockHeaderAttestation(TimeAttestation):
     def deserialize(cls, ctx):
         height = ctx.read_varuint()
         return BitcoinBlockHeaderAttestation(height)
+
+class LitecoinBlockHeaderAttestation(TimeAttestation):
+    """Signed by the Litecoin blockchain
+
+    Identical in design to the BitcoinBlockHeaderAttestation.
+    """
+
+    TAG = bytes.fromhex('06869a0d73d71b45')
+
+    def __init__(self, height):
+        self.height = height
+
+    def __eq__(self, other):
+        if other.__class__ is LitecoinBlockHeaderAttestation:
+            return self.height == other.height
+        else:
+            super().__eq__(other)
+
+    def __lt__(self, other):
+        if other.__class__ is LitecoinBlockHeaderAttestation:
+            return self.height < other.height
+
+        else:
+            super().__eq__(other)
+
+    def __hash__(self):
+        return hash(self.height)
+
+    def verify_against_blockheader(self, digest, block_header):
+        """Verify attestation against a block header
+
+        Not implemented here until there is a well-maintained Litecoin 
+        python library
+        """
+        raise NotImplementedError()
+
+
+    def __repr__(self):
+        return 'LitecoinBlockHeaderAttestation(%r)' % self.height
+
+    def _serialize_payload(self, ctx):
+        ctx.write_varuint(self.height)
+
+    @classmethod
+    def deserialize(cls, ctx):
+        height = ctx.read_varuint()
+        return LitecoinBlockHeaderAttestation(height)
 

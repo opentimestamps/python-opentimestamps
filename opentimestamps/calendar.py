@@ -13,6 +13,7 @@ import binascii
 import urllib.request
 import fnmatch
 
+from urllib.parse import urljoin
 from opentimestamps.core.timestamp import Timestamp
 from opentimestamps.core.serialize import BytesDeserializationContext
 
@@ -59,7 +60,7 @@ class RemoteCalendar:
 
         Returns a Timestamp committing to that digest
         """
-        req = urllib.request.Request(self.url + '/digest', data=digest, headers=self.request_headers)
+        req = urllib.request.Request(urljoin(self.url, '/digest'), data=digest, headers=self.request_headers)
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             if resp.status != 200:
                 raise Exception("Unknown response from calendar: %d" % resp.status)
@@ -78,8 +79,9 @@ class RemoteCalendar:
 
         Raises KeyError if the calendar doesn't have that commitment
         """
-        req = urllib.request.Request(self.url + '/timestamp/' + binascii.hexlify(commitment).decode('utf8'),
-                                     headers=self.request_headers)
+        req = urllib.request.Request(
+            urljoin(urljoin(self.url, '/timestamp/'), binascii.hexlify(commitment).decode('utf8')),
+            headers=self.request_headers)
         try:
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 if resp.status == 200:

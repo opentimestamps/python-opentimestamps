@@ -1,4 +1,4 @@
-# Copyright (C) 2016 The OpenTimestamps developers
+# Copyright (C) 2016-2018 The OpenTimestamps developers
 #
 # This file is part of python-opentimestamps.
 #
@@ -150,7 +150,7 @@ class UrlWhitelist(set):
 DEFAULT_CALENDAR_WHITELIST = \
     UrlWhitelist(['https://*.calendar.opentimestamps.org', # Run by Peter Todd
                   'https://*.calendar.eternitywall.com',   # Run by Riccardo Casatta of Eternity Wall
-                  'https://*.calendar.catallaxy.com',   # Run by Vincent Cloutier of Catallaxy
+                  'https://*.calendar.catallaxy.com',      # Run by Vincent Cloutier of Catallaxy
                  ])
 
 DEFAULT_AGGREGATORS = \

@@ -30,9 +30,10 @@ class OpSecp256k1Commitment(UnaryOp):
             raise MsgValueError("Missing secp256k1 point")
 
         pt = Point.decode(msg[0:33])
+        assert(pt.encode() == msg[0:33])
 
         hasher = hashlib.sha256()
-        hasher.update(pt.encode())
+        hasher.update(msg[0:33])
         hasher.update(msg[33:])
         tweak = int.from_bytes(hasher.digest(), 'big')
         tweak_pt = SECP256K1_GEN.scalar_mul(tweak)

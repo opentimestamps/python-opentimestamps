@@ -1,5 +1,12 @@
 # python-opentimestamps release notes
 
+## v0.3.0
+
+* New calendar server! Thanks to Vincent Cloutier from Catallaxy.
+* URL handling in calendar code now handles tailing slashes.
+* New attestation: `LitecoinBlockHeaderAttestation`.
+
+
 ## v0.2.1
 
 Fixed `make_timestamp_from_block()` w/ blocks containing segwit transactions.

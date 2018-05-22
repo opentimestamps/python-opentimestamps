@@ -122,6 +122,13 @@ class Test_Timestamp(unittest.TestCase):
         with self.assertRaises(RecursionLimitError):
             Timestamp.deserialize(BytesDeserializationContext(serialized), b'')
 
+    def test_str_tree(self):
+        """Converting timestamp to tree"""
+        t = Timestamp(b'')
+        t.ops.add(OpAppend(b'\x01'))
+        t.ops.add(OpSHA256())
+        self.assertEqual(t.str_tree(), " -> sha256\n -> append 01\n")
+
 class Test_DetachedTimestampFile(unittest.TestCase):
     def test_create_from_file(self):
         file_stamp = DetachedTimestampFile.from_fd(OpSHA256(), io.BytesIO(b''))

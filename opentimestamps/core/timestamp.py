@@ -245,7 +245,7 @@ class Timestamp:
                 except SerializationError:
                     pass
                 cur_res = op(self.msg)
-                cur_par = op[0]
+                cur_par = op[0] if len(op) > 0 else None
                 r += " " * indent + " -> " + "%s" % str(op) + str_result(verbosity, cur_par, cur_res) + "\n"
                 r += timestamp.str_tree(indent+4, verbosity=verbosity)
         elif len(self.ops) > 0:

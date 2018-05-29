@@ -122,7 +122,7 @@ class UnknownAttestation(TimeAttestation):
 
     def __lt__(self, other):
         if other.__class__ is UnknownAttestation:
-            return (self.tag, self.payload) < (other.tag, other.payload)
+            return (self.TAG, self.payload) < (other.TAG, other.payload)
         else:
             super().__eq__(other)
 

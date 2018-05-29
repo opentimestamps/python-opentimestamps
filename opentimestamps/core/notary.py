@@ -124,7 +124,7 @@ class UnknownAttestation(TimeAttestation):
         if other.__class__ is UnknownAttestation:
             return (self.TAG, self.payload) < (other.TAG, other.payload)
         else:
-            super().__eq__(other)
+            super().__lt__(other)
 
     def __hash__(self):
         return hash((self.TAG, self.payload))
@@ -205,7 +205,7 @@ class PendingAttestation(TimeAttestation):
             return self.uri < other.uri
 
         else:
-            super().__eq__(other)
+            super().__lt__(other)
 
     def __hash__(self):
         return hash(self.uri)
@@ -268,7 +268,7 @@ class BitcoinBlockHeaderAttestation(TimeAttestation):
             return self.height < other.height
 
         else:
-            super().__eq__(other)
+            super().__lt__(other)
 
     def __hash__(self):
         return hash(self.height)
@@ -319,7 +319,7 @@ class LitecoinBlockHeaderAttestation(TimeAttestation):
             return self.height < other.height
 
         else:
-            super().__eq__(other)
+            super().__lt__(other)
 
     def __hash__(self):
         return hash(self.height)

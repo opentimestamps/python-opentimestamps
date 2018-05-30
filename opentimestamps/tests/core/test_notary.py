@@ -97,3 +97,11 @@ class Test_BitcoinBlockHeaderAttestation(unittest.TestCase):
                                                         'ff')) # one byte of trailing garbage
         with self.assertRaises(TrailingGarbageError):
             TimeAttestation.deserialize(ctx)
+
+class Test_AttestationsComparison(unittest.TestCase):
+    def test_attestation_comparison(self):
+        """Comparing attestations"""
+        self.assertTrue(UnknownAttestation(b'unknown1', b'') < UnknownAttestation(b'unknown2', b''))
+        self.assertTrue(BitcoinBlockHeaderAttestation(1) < PendingAttestation(""))
+        with self.assertRaises(ValueError):
+            UnknownAttestation(PendingAttestation("").TAG, b'')

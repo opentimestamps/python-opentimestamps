@@ -35,14 +35,14 @@ class EthereumBlockHeaderAttestation(notary.TimeAttestation):
         if other.__class__ is EthereumBlockHeaderAttestation:
             return self.height == other.height
         else:
-            super().__eq__(other)
+            return super().__eq__(other)
 
     def __lt__(self, other):
         if other.__class__ is EthereumBlockHeaderAttestation:
             return self.height < other.height
 
         else:
-            super().__lt__(other)
+            return super().__lt__(other)
 
     def __hash__(self):
         return hash(self.height)

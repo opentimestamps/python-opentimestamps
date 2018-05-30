@@ -105,9 +105,11 @@ class UnknownAttestation(TimeAttestation):
         elif len(payload) > self.MAX_PAYLOAD_SIZE:
             raise ValueError("payload must be <= %d bytes long; got %d" % (self.MAX_PAYLOAD_SIZE, len(payload)))
 
-        # FIXME: we should check that tag != one of the tags that we do know
-        # about; if it does the operators < and =, and hash() will likely act
-        # strangely
+        # check that tag != one of the tags that we do know about; if it does
+        # the operators < and =, and hash() will likely act strangely
+        if tag in [bytes.fromhex('83dfe30d2ef90c8e'), bytes.fromhex('0588960d73d71901'),
+                   bytes.fromhex('06869a0d73d71b45'), bytes.fromhex('30fe8087b5c7ead7')]:
+            raise ValueError("UnknownAttestation tag must be different from other attestations tags")
         self.TAG = tag
         self.payload = payload
 

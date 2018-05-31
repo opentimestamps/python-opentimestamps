@@ -74,7 +74,7 @@ class Timestamp:
 
     def __eq__(self, other):
         if isinstance(other, Timestamp):
-            return self.__msg == other.__msg and self.ops == other.ops
+            return self.__msg == other.__msg and self.attestations == other.attestations and self.ops == other.ops
         else:
             return False
 

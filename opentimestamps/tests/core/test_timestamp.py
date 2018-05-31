@@ -129,6 +129,15 @@ class Test_Timestamp(unittest.TestCase):
         t.ops.add(OpSHA256())
         self.assertEqual(t.str_tree(), " -> sha256\n -> append 01\n")
 
+    def test_equality(self):
+        """Checking timestamp equality"""
+        t1 = Timestamp(b'')
+        t1.attestations = {BitcoinBlockHeaderAttestation(1), PendingAttestation("")}
+        t2 = Timestamp(b'')
+        self.assertFalse(t1 == t2)
+        t2.attestations = {PendingAttestation(""), BitcoinBlockHeaderAttestation(1)}
+        self.assertTrue(t1 == t2)
+
 class Test_DetachedTimestampFile(unittest.TestCase):
     def test_create_from_file(self):
         file_stamp = DetachedTimestampFile.from_fd(OpSHA256(), io.BytesIO(b''))

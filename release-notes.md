@@ -1,5 +1,13 @@
 # python-opentimestamps release notes
 
+## v0.4.0
+
+* Breaking change: Timestamp equality comparison now also checks attestations,
+  not just operations.
+* Fixed issues with timestamp less than/greater than comparisons, (e.g. `ts1 < ts2`)
+* Fixed `str_tree()` crash
+
+
 ## v0.3.0
 
 * New calendar server! Thanks to Vincent Cloutier from Catallaxy.

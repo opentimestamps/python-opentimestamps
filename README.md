@@ -23,7 +23,7 @@ returning inconsistent results between versions.
 
 Additionally Travis is supported.
 
-## SSL Root Ceritifcates
+## SSL Root Certificates
 
 On some MacOS setups SSL certificates may be missing. The following commands
 could be of use to resolve this error (the below example assumes a user is

@@ -22,3 +22,15 @@ returning inconsistent results between versions.
     python3 -m unittest discover -v
 
 Additionally Travis is supported.
+
+## Troubleshooting
+
+    `ots -vv stamp filename.txt`
+    
+## Common Error when SSL Root Ceritifcates are not Present
+
+If the above -vv command returns an error that refers to the SSL certificate failing verification, the following commands could be of use for MacOS users to resolve the error (the below example assumes a user is running Python "3.7", and related to the Certifi package: 
+
+    `cd /Applications/Python\ 3.7` 
+    `./Install\ Certificates.command`
+

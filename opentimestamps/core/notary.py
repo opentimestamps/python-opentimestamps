@@ -327,7 +327,7 @@ class LitecoinBlockHeaderAttestation(TimeAttestation):
     def verify_against_blockheader(self, digest, block_header):
         """Verify attestation against a block header
 
-        Not implemented here until there is a well-maintained Litecoin 
+        Not implemented here until there is a well-maintained Litecoin
         python library
         """
         raise NotImplementedError()

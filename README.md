@@ -31,6 +31,6 @@ running Python "3.7", and is using Certifi package):
 
 ```
 cd /Applications/Python\ 3.7
-Install\ Certificates.command
+Install\ Certificates.command 
 ```
 

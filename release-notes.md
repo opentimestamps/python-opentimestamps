@@ -1,5 +1,9 @@
 # python-opentimestamps release notes
 
+## v0.4.2
+
+* Latest python-bitcoinlib marked as compatible; no other changes.
+
 ## v0.4.1
 
 * Latest python-bitcoinlib marked as compatible; no other changes.

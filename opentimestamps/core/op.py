@@ -10,8 +10,8 @@
 # in the LICENSE file.
 
 import binascii
+import Cryptodome.Hash.keccak
 import hashlib
-import sha3
 import opentimestamps.core.serialize
 
 class MsgValueError(ValueError):
@@ -344,6 +344,6 @@ class OpKECCAK256(UnaryOp):
     DIGEST_LENGTH = 32
 
     def _do_op_call(self, msg):
-        r = sha3.keccak_256(bytes(msg)).digest()
+        r = Cryptodome.Hash.keccak.new(digest_bits=256, data=bytes(msg)).digest()
         assert len(r) == self.DIGEST_LENGTH
         return r

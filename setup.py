@@ -70,7 +70,7 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=['python-bitcoinlib>=0.9.0,<0.12.0',
-                      'pysha3>=1.0.2'],
+                      'pycryptodomex>=3.3.1'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,

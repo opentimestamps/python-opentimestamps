@@ -1,5 +1,11 @@
 # python-opentimestamps release notes
 
+## v0.4.4
+
+* Update requirements to mark python-bitcoinlib v0.12.x as compatible.
+
+v0.12.x has breaking changes. But they don't affect us.
+
 ## v0.4.3
 
 * Replaced pysha3 dependency with pycryptodomex. The former was not compatible

@@ -1,5 +1,9 @@
 # python-opentimestamps release notes
 
+## v0.4.5
+
+* Fix broken upload on pypi
+
 ## v0.4.4
 
 * Update requirements to mark python-bitcoinlib v0.12.x as compatible.

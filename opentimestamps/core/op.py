@@ -347,3 +347,6 @@ class OpKECCAK256(UnaryOp):
         r = Cryptodome.Hash.keccak.new(digest_bits=256, data=bytes(msg)).digest()
         assert len(r) == self.DIGEST_LENGTH
         return r
+
+from opentimestamps.core.secp256k1 import OpSecp256k1Commitment
+

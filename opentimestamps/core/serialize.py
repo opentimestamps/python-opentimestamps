@@ -155,6 +155,9 @@ class StreamSerializationContext(SerializationContext):
                     break
                 value >>= 7
 
+    def write_uint8(self, value):
+        self.fd.write(bytes([value]))
+
     def write_bytes(self, value):
         self.fd.write(value)
 
@@ -198,6 +201,9 @@ class StreamDeserializationContext(DeserializationContext):
             shift += 7
 
         return value
+
+    def read_uint8(self):
+        return self.fd_read(1)[0]
 
     def read_bytes(self, expected_length=None):
         if expected_length is None:

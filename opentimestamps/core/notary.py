@@ -250,6 +250,9 @@ class BitcoinBlockHeaderAttestation(TimeAttestation):
     exceptionally rare events anyway, so better to just tell the user the timestamp
     can't be verified rather than add almost-never tested code to handle that case
     more gracefully.
+
+    There is no testnet/regtest/signet/etc. version of this because the purpose
+    of testnets is to test code. The best test uses the exact same code paths.
     """
 
     TAG = bytes.fromhex('0588960d73d71901')

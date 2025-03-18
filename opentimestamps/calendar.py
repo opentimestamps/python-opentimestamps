@@ -149,8 +149,8 @@ class UrlWhitelist(set):
 
 DEFAULT_CALENDAR_WHITELIST = \
     UrlWhitelist(['https://*.calendar.opentimestamps.org', # Run by Peter Todd
-                  'https://*.calendar.eternitywall.com',   # Run by Riccardo Casatta of Eternity Wall
-                  'https://*.calendar.catallaxy.com',      # Run by Vincent Cloutier of Catallaxy
+                  'https://*.calendar.eternitywall.com',   # Run by Riccardo Casatta
+                  'https://*.calendar.catallaxy.com',      # Run by Bull Bitcoin
                  ])
 
 DEFAULT_AGGREGATORS = \

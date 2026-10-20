@@ -138,6 +138,20 @@ class Test_Timestamp(unittest.TestCase):
         t2.attestations = {PendingAttestation(""), BitcoinBlockHeaderAttestation(1)}
         self.assertTrue(t1 == t2)
 
+    def test_deserialization_repeated_op(self):
+        """Deserialization fails if an op is repeated at the same node"""
+        t = Timestamp(b'')
+        t.ops.add(OpSHA256()).attestations.add(PendingAttestation(''))
+        ctx = BytesSerializationContext()
+        t.serialize(ctx)
+        branch = ctx.getbytes()
+        Timestamp.deserialize(BytesDeserializationContext(branch), b'')
+
+        ctx = BytesDeserializationContext(b'\xff' + branch + branch)
+        with self.assertRaises(DeserializationError):
+            Timestamp.deserialize(ctx, b'')
+
+
 class Test_DetachedTimestampFile(unittest.TestCase):
     def test_create_from_file(self):
         file_stamp = DetachedTimestampFile.from_fd(OpSHA256(), io.BytesIO(b''))

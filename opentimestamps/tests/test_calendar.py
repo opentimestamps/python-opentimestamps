@@ -38,6 +38,24 @@ class Test_UrlWhitelist(unittest.TestCase):
         self.assertIn("https://example.com", wl)
         self.assertIn("http://example.com", wl)
 
+    def test_port(self):
+        """Ports must match, and be parseable"""
+        wl = UrlWhitelist(("https://*.example.com:8080",))
+        self.assertIn("https://foo.example.com:8080", wl)
+        self.assertNotIn("https://foo.example.com", wl)
+        self.assertNotIn("https://foo.example.com:8081", wl)
+
+        wl = UrlWhitelist(("*.example.com",))
+        self.assertNotIn("https://foo.example.com:8080", wl)
+        self.assertNotIn("https://evil.com:.example.com", wl)
+        self.assertNotIn("https://evil.com:80.example.com", wl)
+
+    def test_invalid_pattern(self):
+        """Patterns need a host and a numeric port"""
+        for url in ("https://", "https://*.example.com:*", "https://example.com:80x"):
+            with self.assertRaises(ValueError):
+                UrlWhitelist((url,))
+
     def test_glob_match(self):
         """Glob matching"""
         wl = UrlWhitelist(("*.example.com",))

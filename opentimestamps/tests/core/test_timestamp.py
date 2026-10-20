@@ -187,6 +187,19 @@ class Test_DetachedTimestampFile(unittest.TestCase):
                 ctx = BytesDeserializationContext(serialized)
                 DetachedTimestampFile.deserialize(ctx)
 
+    def test_keccak256_is_not_a_file_hash_op(self):
+        """Keccak256 can't be the file hash op of a detached timestamp"""
+        ctx = BytesDeserializationContext(DetachedTimestampFile.HEADER_MAGIC + b'\x01' + OpKECCAK256.TAG + bytes(32) + b'\x00' + PendingAttestation.TAG + b'\x01\x00')
+        with self.assertRaises(DeserializationError):
+            DetachedTimestampFile.deserialize(ctx)
+
+        # but it remains valid within a timestamp
+        t = Timestamp(b'')
+        t.ops.add(OpKECCAK256()).attestations.add(PendingAttestation(''))
+        ctx = BytesSerializationContext()
+        t.serialize(ctx)
+        self.assertEqual(Timestamp.deserialize(BytesDeserializationContext(ctx.getbytes()), b''), t)
+
 
 class Test_cat_sha256(unittest.TestCase):
     def test(self):

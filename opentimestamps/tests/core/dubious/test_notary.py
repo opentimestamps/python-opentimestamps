@@ -34,3 +34,9 @@ class Test_EthereumBlockHeaderAttestation(unittest.TestCase):
         attestation = EthereumBlockHeaderAttestation(1)
         timestamp = attestation.verify_against_blockheader(bytes.fromhex("56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"), eth_block_1)
         self.assertEqual(1438269988, timestamp)
+
+    def test_deserialization_height_limit(self):
+        """Block heights are limited in size"""
+        ctx = BytesDeserializationContext(bytes.fromhex('30fe8087b5c7ead7' + '05' + 'ffffffff7f'))
+        with self.assertRaises(DeserializationError):
+            TimeAttestation.deserialize(ctx)

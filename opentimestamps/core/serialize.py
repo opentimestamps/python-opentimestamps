@@ -189,16 +189,21 @@ class StreamDeserializationContext(DeserializationContext):
         else:
             raise DeserializationError('read_bool() expected 0xff or 0x00; got %d' % b)
 
+    MAX_VARUINT_BYTES = 9
+    """Maximum encoded length of a varuint, which limits it to 63 bits"""
+
     def read_varuint(self):
         value = 0
         shift = 0
 
-        while True:
+        for _ in range(self.MAX_VARUINT_BYTES):
             b = self.fd_read(1)[0]
             value |= (b & 0b01111111) << shift
             if not (b & 0b10000000):
                 break
             shift += 7
+        else:
+            raise DeserializationError('varuint exceeds %d bytes' % self.MAX_VARUINT_BYTES)
 
         return value
 

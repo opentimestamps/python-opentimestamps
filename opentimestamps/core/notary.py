@@ -26,6 +26,9 @@ class TimeAttestation:
     MAX_PAYLOAD_SIZE = 8192
     """Maximum size of a attestation payload"""
 
+    MAX_HEIGHT = 2**32 - 1
+    """Maximum block height of a blockchain attestation"""
+
     def _serialize_payload(self, ctx):
         raise NotImplementedError
 
@@ -62,6 +65,13 @@ class TimeAttestation:
 
         else:
             return NotImplemented
+
+    @classmethod
+    def _deserialize_height(cls, ctx):
+        height = ctx.read_varuint()
+        if height > cls.MAX_HEIGHT:
+            raise opentimestamps.core.serialize.DeserializationError("Block height too large; %d > %d" % (height, cls.MAX_HEIGHT))
+        return height
 
     @classmethod
     def deserialize(cls, ctx):
@@ -297,7 +307,7 @@ class BitcoinBlockHeaderAttestation(TimeAttestation):
 
     @classmethod
     def deserialize(cls, ctx):
-        height = ctx.read_varuint()
+        height = cls._deserialize_height(ctx)
         return BitcoinBlockHeaderAttestation(height)
 
 class LitecoinBlockHeaderAttestation(TimeAttestation):
@@ -344,6 +354,6 @@ class LitecoinBlockHeaderAttestation(TimeAttestation):
 
     @classmethod
     def deserialize(cls, ctx):
-        height = ctx.read_varuint()
+        height = cls._deserialize_height(ctx)
         return LitecoinBlockHeaderAttestation(height)
 

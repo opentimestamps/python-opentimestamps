@@ -68,5 +68,5 @@ class EthereumBlockHeaderAttestation(notary.TimeAttestation):
 
     @classmethod
     def deserialize(cls, ctx):
-        height = ctx.read_varuint()
+        height = cls._deserialize_height(ctx)
         return EthereumBlockHeaderAttestation(height)

@@ -22,3 +22,14 @@ class Test_serialization(unittest.TestCase):
         with self.assertRaises(TrailingGarbageError):
             ctx = BytesDeserializationContext(b'b')
             ctx.assert_eof()
+
+    def test_varuint_length_limit(self):
+        """Varuint encodings are limited in length"""
+        ctx = BytesDeserializationContext(b'\xff' * 8 + b'\x7f')
+        self.assertEqual(ctx.read_varuint(), 2**63 - 1)
+
+        with self.assertRaises(DeserializationError):
+            BytesDeserializationContext(b'\xff' * 9 + b'\x01').read_varuint()
+
+        with self.assertRaises(DeserializationError):
+            BytesDeserializationContext(b'\xff' * 2000 + b'\x01').read_varbytes(100)

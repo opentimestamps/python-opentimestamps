@@ -122,6 +122,139 @@ class Test_Timestamp(unittest.TestCase):
         with self.assertRaises(RecursionLimitError):
             Timestamp.deserialize(BytesDeserializationContext(serialized), b'')
 
+    def test_deserialization_memory_limit(self):
+        """Deserialization fails if the op results use too much memory"""
+        def serialize(branches):
+            # Each branch is an append op that yields a result of 4096 bytes
+            ctx = BytesSerializationContext()
+            t = Timestamp(b'\x00' * 4000)
+            for i in range(branches):
+                t.ops.add(OpAppend(bytes(96 - 2) + i.to_bytes(2, 'big'))).attestations.add(PendingAttestation(''))
+            t.serialize(ctx)
+            return ctx.getbytes()
+
+        branches_under_limit = Timestamp.MAX_MEMORY_USAGE // (4096 + Timestamp.NODE_MEMORY_USAGE)
+
+        ctx = BytesDeserializationContext(serialize(branches_under_limit))
+        Timestamp.deserialize(ctx, b'\x00' * 4000)
+
+        ctx = BytesDeserializationContext(serialize(branches_under_limit + 1))
+        with self.assertRaises(DeserializationError):
+            Timestamp.deserialize(ctx, b'\x00' * 4000)
+
+    def test_deserialization_many_small_results(self):
+        """Deserialization fails if there are too many op results"""
+        t = Timestamp(b'')
+        for i in range(Timestamp.MAX_MEMORY_USAGE // Timestamp.NODE_MEMORY_USAGE + 1):
+            t.ops.add(OpAppend(i.to_bytes(3, 'big'))).attestations.add(PendingAttestation(''))
+        ctx = BytesSerializationContext()
+        t.serialize(ctx)
+
+        with self.assertRaises(DeserializationError):
+            Timestamp.deserialize(BytesDeserializationContext(ctx.getbytes()), b'')
+
+    def test_merge_memory_limit(self):
+        """Merging fails, changing nothing, past the memory limit"""
+        def stamp(indexes):
+            # Each branch is an append op that yields a result of 4096 bytes
+            t = Timestamp(b'\x00' * 4000)
+            for i in indexes:
+                t.ops.add(OpAppend(bytes(96 - 2) + i.to_bytes(2, 'big'))).attestations.add(PendingAttestation(''))
+            return t
+
+        def serialized(t):
+            ctx = BytesSerializationContext()
+            t.serialize(ctx)
+            return ctx.getbytes()
+
+        branches_under_limit = Timestamp.MAX_MEMORY_USAGE // (4096 + Timestamp.NODE_MEMORY_USAGE)
+        half = branches_under_limit // 2
+
+        # Two halves that make up exactly the limit merge, and the result
+        # reads back
+        t = stamp(range(half))
+        t.merge(stamp(range(half, branches_under_limit)))
+        self.assertEqual(len(t.ops), branches_under_limit)
+        Timestamp.deserialize(BytesDeserializationContext(serialized(t)), b'\x00' * 4000)
+
+        # One more branch is refused, and the timestamp is left as it was
+        before = serialized(t)
+        with self.assertRaises(ValueError):
+            t.merge(stamp([branches_under_limit]))
+        self.assertEqual(serialized(t), before)
+
+        # Several branches, some of them new, are refused as a whole
+        with self.assertRaises(ValueError):
+            t.merge(stamp(range(half, branches_under_limit + 1)))
+        self.assertEqual(serialized(t), before)
+
+        # What it has already is not an addition, nor is an attestation
+        other = stamp(range(half))
+        other.attestations.add(PendingAttestation('foobar'))
+        t.merge(other)
+        self.assertIn(PendingAttestation('foobar'), t.attestations)
+        self.assertEqual(len(t.ops), branches_under_limit)
+
+    def test_merge_memory_limit_deep_branch(self):
+        """A merge that adds a deep branch past the limit is refused"""
+        t1 = Timestamp(b'')
+        t1.ops.add(OpAppend(b'a')).attestations.add(PendingAttestation(''))
+        t2 = Timestamp(b'')
+        node = t2.ops.add(OpAppend(b'a'))
+        for i in range(Timestamp.MAX_MEMORY_USAGE // Timestamp.NODE_MEMORY_USAGE):
+            node.ops.add(OpAppend(i.to_bytes(3, 'big'))).attestations.add(PendingAttestation(''))
+
+        with self.assertRaises(ValueError):
+            t1.merge(t2)
+        self.assertEqual(len(t1.ops[OpAppend(b'a')].ops), 0)
+
+    def test_merge_memory_limit_below_a_root(self):
+        """The limit of a merge below the root is checked against the root"""
+        def build():
+            # A node below the root, as a pending attestation sits below the
+            # nonce and the digest of a stamp
+            root = Timestamp(b'')
+            node = root.ops.add(OpAppend(b'a')).ops.add(OpSHA256())
+            node.attestations.add(PendingAttestation(''))
+            return root, node
+
+        def response(msg, branches):
+            t = Timestamp(msg)
+            for i in range(branches):
+                t.ops.add(OpAppend(i.to_bytes(3, 'big'))).attestations.add(PendingAttestation(''))
+            return t
+
+        def serialized(t):
+            ctx = BytesSerializationContext()
+            t.serialize(ctx)
+            return ctx.getbytes()
+
+        root, node = build()
+        # The node alone stays under the limit, the root goes over it by the
+        # two op results above the node
+        branches = Timestamp.MAX_MEMORY_USAGE // (Timestamp.NODE_MEMORY_USAGE + len(node.msg) + 3)
+        other = response(node.msg, branches)
+        self.assertLessEqual(node._memory_usage() + other._memory_usage(), Timestamp.MAX_MEMORY_USAGE)
+        self.assertGreater(root._memory_usage() + other._memory_usage(), Timestamp.MAX_MEMORY_USAGE)
+
+        before = serialized(root)
+        with self.assertRaises(ValueError):
+            node.merge(other, root=root)
+        self.assertEqual(serialized(root), before)
+
+        with self.assertRaises(TypeError):
+            node.merge(other, root=b'')
+
+        # Without the root the merge passes, which is why callers pass it
+        node.merge(other)
+        with self.assertRaises(DeserializationError):
+            Timestamp.deserialize(BytesDeserializationContext(serialized(root)), b'')
+
+        # A merge that fits under the root is done
+        root, node = build()
+        node.merge(response(node.msg, 10), root=root)
+        self.assertEqual(len(node.ops), 10)
+
     def test_str_tree(self):
         """Converting timestamp to tree"""
         t = Timestamp(b'')

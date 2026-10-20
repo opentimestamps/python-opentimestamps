@@ -11,6 +11,7 @@
 
 import binascii
 import Cryptodome.Hash.keccak
+import Cryptodome.Hash.RIPEMD160
 import hashlib
 import opentimestamps.core.serialize
 
@@ -288,13 +289,18 @@ class CryptOp(UnaryOp):
 
     DIGEST_LENGTH = None
 
+    def _new_hasher(self):
+        return hashlib.new(self.HASHLIB_NAME)
+
     def _do_op_call(self, msg):
-        r = hashlib.new(self.HASHLIB_NAME, bytes(msg)).digest()
+        hasher = self._new_hasher()
+        hasher.update(bytes(msg))
+        r = hasher.digest()
         assert len(r) == self.DIGEST_LENGTH
         return r
 
     def hash_fd(self, fd):
-        hasher = hashlib.new(self.HASHLIB_NAME)
+        hasher = self._new_hasher()
         while True:
             chunk = fd.read(2**20) # 1MB chunks
             if chunk:
@@ -327,6 +333,13 @@ class OpRIPEMD160(CryptOp):
     TAG_NAME = 'ripemd160'
     HASHLIB_NAME = "ripemd160"
     DIGEST_LENGTH = 20
+
+    def _new_hasher(self):
+        # hashlib has no ripemd160 when OpenSSL does not provide it
+        try:
+            return super()._new_hasher()
+        except ValueError:
+            return Cryptodome.Hash.RIPEMD160.new()
 
 @CryptOp._register_op
 class OpSHA256(CryptOp):

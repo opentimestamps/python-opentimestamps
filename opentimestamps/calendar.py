@@ -122,6 +122,11 @@ class UrlWhitelist(set):
             # FIXME: should have a more friendly error message
             assert not parsed_url.params and not parsed_url.query and not parsed_url.fragment
 
+            # The port is a number, not a glob.
+            if not parsed_url.hostname:
+                raise ValueError("URL has no host: %r" % url)
+            parsed_url.port # raises ValueError if the port isn't a number
+
             set.add(self, parsed_url)
 
         else:
@@ -135,10 +140,19 @@ class UrlWhitelist(set):
         if parsed_url.params or parsed_url.query or parsed_url.fragment:
             return False
 
+        # The port must be parseable, as otherwise the host and the port can't
+        # be told apart.
+        try:
+            port = parsed_url.port
+        except ValueError:
+            return False
+
         for pattern in self:
             if (parsed_url.scheme == pattern.scheme and
                     parsed_url.path == pattern.path and
-                    fnmatch.fnmatch(parsed_url.netloc, pattern.netloc)):
+                    parsed_url.hostname is not None and
+                    fnmatch.fnmatch(parsed_url.hostname, pattern.hostname) and
+                    port == pattern.port):
                 return True
 
         else:

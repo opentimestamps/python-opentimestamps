@@ -21,8 +21,6 @@ returning inconsistent results between versions.
 
     python3 -m unittest discover -v
 
-Additionally Travis is supported.
-
 ## SSL Root Certificates
 
 On some MacOS setups SSL certificates may be missing. The following commands

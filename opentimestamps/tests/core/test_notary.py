@@ -98,6 +98,20 @@ class Test_BitcoinBlockHeaderAttestation(unittest.TestCase):
         with self.assertRaises(TrailingGarbageError):
             TimeAttestation.deserialize(ctx)
 
+    def test_deserialization_height_limit(self):
+        """Block heights are limited in size"""
+        def deserialize(height):
+            ser = BytesSerializationContext()
+            ser.write_varuint(height)
+            payload = BytesSerializationContext()
+            payload.write_bytes(BitcoinBlockHeaderAttestation.TAG)
+            payload.write_varbytes(ser.getbytes())
+            return TimeAttestation.deserialize(BytesDeserializationContext(payload.getbytes()))
+
+        self.assertEqual(deserialize(2**32 - 1).height, 2**32 - 1)
+        with self.assertRaises(DeserializationError):
+            deserialize(2**32)
+
 class Test_AttestationsComparison(unittest.TestCase):
     def test_attestation_comparison(self):
         """Comparing attestations"""

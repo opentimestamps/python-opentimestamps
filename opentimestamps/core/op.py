@@ -336,7 +336,7 @@ class OpSHA256(CryptOp):
     DIGEST_LENGTH = 32
 
 
-@CryptOp._register_op
+@UnaryOp._register_op
 class OpKECCAK256(UnaryOp):
     __slots__ = []
     TAG = b'\x67'

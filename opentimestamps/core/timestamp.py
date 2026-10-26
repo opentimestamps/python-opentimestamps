@@ -164,6 +164,9 @@ class Timestamp:
             else:
                 op = Op.deserialize_from_tag(ctx, tag)
 
+                if op in self.ops:
+                    raise opentimestamps.core.serialize.DeserializationError("Invalid timestamp; op %r repeated" % (op,))
+
                 try:
                     result = op(initial_msg)
                 except MsgValueError as exp:

@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "opentimestamps"
+dynamic = ["version"]
+description = "Create and verify OpenTimestamps proofs"
+readme = "README.md"
+license = {text = "LGPL-3.0-or-later"}
+requires-python = ">=3.11"
+authors = [
+    {name = "Peter Todd", email = "pete@petertodd.org"},
+]
+keywords = ["cryptography", "timestamping", "bitcoin"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Security :: Cryptography",
+    "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+]
+dependencies = [
+    "python-bitcoinlib>=0.9.0,<0.13.0",
+    "pycryptodomex>=3.3.1",
+]
+
+[project.optional-dependencies]
+git = ["GitPython>=2.0.8"]
+test = ["GitPython>=2.0.8"]
+
+[project.urls]
+Homepage = "https://github.com/opentimestamps/python-opentimestamps"
+
+[tool.setuptools]
+packages = [
+    "opentimestamps",
+    "opentimestamps.core",
+    "opentimestamps.core.dubious",
+    "opentimestamps.tests",
+    "opentimestamps.tests.core",
+    "opentimestamps.tests.core.dubious",
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "opentimestamps.__version__"}

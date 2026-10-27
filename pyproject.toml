@@ -7,7 +7,7 @@ name = "opentimestamps"
 dynamic = ["version"]
 description = "Create and verify OpenTimestamps proofs"
 readme = "README.md"
-license = {text = "LGPL-3.0-or-later"}
+license = "LGPL-3.0-or-later"
 requires-python = ">=3.11"
 authors = [
     {name = "Peter Todd", email = "pete@petertodd.org"},
@@ -17,7 +17,6 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Topic :: Security :: Cryptography",
-    "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",

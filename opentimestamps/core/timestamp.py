@@ -57,6 +57,24 @@ class Timestamp:
     """
     __slots__ = ['__msg', 'attestations', 'ops']
 
+    MAX_MEMORY_USAGE = 2**24
+    """Approximate memory limit, in bytes, for the op results of a timestamp
+
+    deserialize() enforces it, and merge() refuses a merge that would take a
+    timestamp over it, so that what merge() builds can be read back.
+
+    Every op result is kept in memory, together with a Timestamp node, and one
+    op can turn a few bytes of serialized timestamp into a result of up to
+    Op.MAX_RESULT_LENGTH bytes. A result is counted as its length plus
+    NODE_MEMORY_USAGE.
+
+    This limit is not part of the timestamp format. It is this library's
+    limit for now, and other implementations are free to use another.
+    """
+
+    NODE_MEMORY_USAGE = 1024
+    """Approximate memory, in bytes, of the Timestamp node of an op result"""
+
     @property
     def msg(self):
         return self.__msg
@@ -81,10 +99,41 @@ class Timestamp:
     def __repr__(self):
         return 'Timestamp(<%s>)' % binascii.hexlify(self.__msg).decode('utf8')
 
-    def merge(self, other):
+    def _memory_usage(self):
+        """Memory usage of the op results below this node, as deserialize() counts it"""
+        return sum(len(stamp.msg) + self.NODE_MEMORY_USAGE + stamp._memory_usage() for stamp in self.ops.values())
+
+    def _added_memory_usage(self, other):
+        """Memory usage of the op results of other that this timestamp does not have"""
+        usage = 0
+        for op, other_stamp in other.ops.items():
+            our_stamp = self.ops.get(op)
+            if our_stamp is None:
+                usage += len(other_stamp.msg) + self.NODE_MEMORY_USAGE + other_stamp._memory_usage()
+            else:
+                usage += our_stamp._added_memory_usage(other_stamp)
+        return usage
+
+    def _merge(self, other):
+        self.attestations.update(other.attestations)
+
+        for other_op, other_op_stamp in other.ops.items():
+            our_op_stamp = self.ops.add(other_op)
+            our_op_stamp._merge(other_op_stamp)
+
+    def merge(self, other, *, root=None):
         """Add all operations and attestations from another timestamp to this one
 
-        Raises ValueError if the other timestamp isn't for the same message
+        The limit applies to the whole timestamp that deserialize() reads. A
+        caller that merges into a node below the root of a timestamp must pass
+        that root, a Timestamp that has this one somewhere below it. Without
+        it the limit is checked against this node alone, and the whole
+        timestamp can go over it.
+
+        Raises ValueError if the other timestamp isn't for the same message, or
+        if the op results of the root (this timestamp, if none is given) would
+        together use more than MAX_MEMORY_USAGE after the merge. Nothing is
+        changed when an exception is raised.
         """
         if not isinstance(other, Timestamp):
             raise TypeError("Can only merge Timestamps together")
@@ -92,11 +141,16 @@ class Timestamp:
         if self.__msg != other.__msg:
             raise ValueError("Can't merge timestamps for different messages together")
 
-        self.attestations.update(other.attestations)
+        if root is None:
+            root = self
+        elif not isinstance(root, Timestamp):
+            raise TypeError("root must be a Timestamp")
 
-        for other_op, other_op_stamp in other.ops.items():
-            our_op_stamp = self.ops.add(other_op)
-            our_op_stamp.merge(other_op_stamp)
+        added = self._added_memory_usage(other)
+        if added and root._memory_usage() + added > self.MAX_MEMORY_USAGE:
+            raise ValueError("Merged timestamp op results would exceed the memory limit")
+
+        self._merge(other)
 
     def serialize(self, ctx):
         if not len(self.attestations) and not len(self.ops):
@@ -128,7 +182,7 @@ class Timestamp:
             last_stamp.serialize(ctx)
 
     @classmethod
-    def deserialize(cls, ctx, initial_msg, _recursion_limit=256):
+    def deserialize(cls, ctx, initial_msg, _recursion_limit=256, _memory_left=None):
         """Deserialize
 
         Because the serialization format doesn't include the message that the
@@ -137,7 +191,9 @@ class Timestamp:
 
         The message you provide is assumed to be correct; if it causes a op to
         raise MsgValueError when the results are being calculated (done
-        immediately, not lazily) DeserializationError is raised instead.
+        immediately, not lazily) DeserializationError is raised instead. The
+        same is done if the op results of the whole timestamp together use more
+        than MAX_MEMORY_USAGE.
         """
 
         # FIXME: The recursion limit is arguably a bit of a hack given that
@@ -150,6 +206,9 @@ class Timestamp:
         # the serialization/__init__() code.
         if not _recursion_limit:
             raise opentimestamps.core.serialize.RecursionLimitError("Reached timestamp recursion depth limit while deserializing")
+
+        if _memory_left is None:
+            _memory_left = [cls.MAX_MEMORY_USAGE]
 
         # FIXME: note how a lazy implementation would have different behavior
         # with respect to deserialization errors; is this a good design?
@@ -172,7 +231,11 @@ class Timestamp:
                 except MsgValueError as exp:
                     raise opentimestamps.core.serialize.DeserializationError("Invalid timestamp; message invalid for op %r: %r" % (op, exp))
 
-                stamp = Timestamp.deserialize(ctx, result, _recursion_limit=_recursion_limit-1)
+                _memory_left[0] -= len(result) + cls.NODE_MEMORY_USAGE
+                if _memory_left[0] < 0:
+                    raise opentimestamps.core.serialize.DeserializationError("Invalid timestamp; op results exceed the memory limit")
+
+                stamp = Timestamp.deserialize(ctx, result, _recursion_limit=_recursion_limit-1, _memory_left=_memory_left)
                 self.ops[op] = stamp
 
         tag = ctx.read_bytes(1)

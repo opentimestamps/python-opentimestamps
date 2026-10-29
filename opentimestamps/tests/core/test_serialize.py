@@ -33,3 +33,10 @@ class Test_serialization(unittest.TestCase):
 
         with self.assertRaises(DeserializationError):
             BytesDeserializationContext(b'\xff' * 2000 + b'\x01').read_varbytes(100)
+
+    def test_read_bytes_without_length(self):
+        """read_bytes() without a length reads a varuint length first"""
+        ctx = BytesDeserializationContext(b'\x03abcd')
+        self.assertEqual(ctx.read_bytes(), b'abc')
+        self.assertEqual(ctx.read_bytes(1), b'd')
+        ctx.assert_eof()

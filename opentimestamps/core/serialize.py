@@ -89,18 +89,22 @@ class DeserializationContext:
         """Read a bool"""
         raise NotImplementedError
 
-    def read_varuint(self, max_int):
+    def read_varuint(self):
         """Read a variable-length unsigned integer"""
         raise NotImplementedError
 
-    def read_bytes(self, expected_length):
-        """Read fixed-length bytes"""
+    def read_bytes(self, expected_length=None):
+        """Read fixed-length bytes
+
+        Without expected_length, a varuint length is read first.
+        """
         raise NotImplementedError
 
-    def read_varbytes(self, value, max_length=None):
+    def read_varbytes(self, max_len, min_len=0):
         """Read variable-length bytes
 
-        No more than max_length bytes will be read.
+        Raises DeserializationError if the length is over max_len or under
+        min_len.
         """
         raise NotImplementedError
 
@@ -212,7 +216,7 @@ class StreamDeserializationContext(DeserializationContext):
 
     def read_bytes(self, expected_length=None):
         if expected_length is None:
-            expected_length = self.read_varuint(None)
+            expected_length = self.read_varuint()
         return self.fd_read(expected_length)
 
     def read_varbytes(self, max_len, min_len=0):

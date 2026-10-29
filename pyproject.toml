@@ -31,7 +31,7 @@ dependencies = [
 
 [project.optional-dependencies]
 git = ["GitPython>=2.0.8"]
-test = ["GitPython>=2.0.8"]
+test = ["GitPython>=2.0.8", "hypothesis>=6.10.1"]
 
 [project.urls]
 Homepage = "https://github.com/opentimestamps/python-opentimestamps"

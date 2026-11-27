@@ -57,6 +57,8 @@ class Timestamp:
     """
     __slots__ = ['__msg', 'attestations', 'ops']
 
+    MAX_DEPTH = 255 # most ops on a path from the root that deserialize() accepts
+
     @property
     def msg(self):
         return self.__msg
@@ -98,7 +100,20 @@ class Timestamp:
             our_op_stamp = self.ops.add(other_op)
             our_op_stamp.merge(other_op_stamp)
 
+    def _check_depth(self):
+        """Raise SerializerValueError if deserialize() would refuse this timestamp as too deep"""
+        stamps = [(self, 0)]
+        while stamps:
+            stamp, depth = stamps.pop()
+            if depth > self.MAX_DEPTH:
+                raise opentimestamps.core.serialize.SerializerValueError("Timestamp exceeds depth limit of %d ops" % self.MAX_DEPTH)
+            stamps.extend((op_stamp, depth + 1) for op_stamp in stamp.ops.values())
+
     def serialize(self, ctx):
+        self._check_depth()
+        self._serialize(ctx)
+
+    def _serialize(self, ctx):
         if not len(self.attestations) and not len(self.ops):
             raise ValueError("An empty timestamp can't be serialized")
 
@@ -121,14 +136,14 @@ class Timestamp:
             for op, stamp in sorted_ops[0:-1]:
                 ctx.write_bytes(b'\xff')
                 op.serialize(ctx)
-                stamp.serialize(ctx)
+                stamp._serialize(ctx)
 
             last_op, last_stamp = sorted_ops[-1]
             last_op.serialize(ctx)
-            last_stamp.serialize(ctx)
+            last_stamp._serialize(ctx)
 
     @classmethod
-    def deserialize(cls, ctx, initial_msg, _recursion_limit=256):
+    def deserialize(cls, ctx, initial_msg, _recursion_limit=MAX_DEPTH + 1):
         """Deserialize
 
         Because the serialization format doesn't include the message that the
@@ -145,9 +160,6 @@ class Timestamp:
         # the other hand, it has the advantage of being a very simple
         # solution to the problem, and the limit isn't likely to be reached by
         # nearly all timestamps anyway.
-        #
-        # FIXME: Corresponding code to detect this condition is missing from
-        # the serialization/__init__() code.
         if not _recursion_limit:
             raise opentimestamps.core.serialize.RecursionLimitError("Reached timestamp recursion depth limit while deserializing")
 
@@ -317,6 +329,8 @@ class DetachedTimestampFile:
         return cls(file_hash_op, Timestamp(fd_hash))
 
     def serialize(self, ctx):
+        self.timestamp._check_depth()
+
         ctx.write_bytes(self.HEADER_MAGIC)
 
         ctx.write_uint8(self.MAJOR_VERSION)
@@ -325,7 +339,7 @@ class DetachedTimestampFile:
         assert self.file_hash_op.DIGEST_LENGTH == len(self.timestamp.msg)
         ctx.write_bytes(self.timestamp.msg)
 
-        self.timestamp.serialize(ctx)
+        self.timestamp._serialize(ctx)
 
     @classmethod
     def deserialize(cls, ctx):

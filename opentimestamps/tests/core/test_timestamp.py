@@ -16,6 +16,15 @@ from opentimestamps.core.serialize import *
 from opentimestamps.core.timestamp import *
 from opentimestamps.core.op import *
 
+def make_chain(msg, n):
+    """Timestamp with n OpSHA256 in a row, then a pending attestation"""
+    root = Timestamp(msg)
+    stamp = root
+    for _ in range(n):
+        stamp = stamp.ops.add(OpSHA256())
+    stamp.attestations.add(PendingAttestation('foobar'))
+    return root
+
 class Test_Timestamp(unittest.TestCase):
     def test_add_op(self):
         """Adding operations to timestamps"""
@@ -122,6 +131,36 @@ class Test_Timestamp(unittest.TestCase):
         with self.assertRaises(RecursionLimitError):
             Timestamp.deserialize(BytesDeserializationContext(serialized), b'')
 
+    def test_serialization_max_depth(self):
+        """A timestamp at the recursion limit round-trips"""
+        stamp = make_chain(b'', 255)
+        ctx = BytesSerializationContext()
+        stamp.serialize(ctx)
+        stamp2 = Timestamp.deserialize(BytesDeserializationContext(ctx.getbytes()), b'')
+        self.assertEqual(stamp, stamp2)
+
+    def test_serialization_too_deep(self):
+        """Serializing a timestamp past the recursion limit fails, writing nothing"""
+        stamp = make_chain(b'', 256)
+        ctx = BytesSerializationContext()
+        with self.assertRaises(SerializerValueError):
+            stamp.serialize(ctx)
+        self.assertEqual(ctx.getbytes(), b'')
+
+    def test_serialization_too_deep_after_merge(self):
+        """Serializing a timestamp that merge() made too deep fails"""
+        stamp = Timestamp(b'')
+        sub = stamp.ops.add(OpAppend(b'\x01'))
+        sub.attestations.add(PendingAttestation('foobar'))
+        stamp.serialize(BytesSerializationContext())
+
+        deep = make_chain(b'\x01', 255)
+        deep.serialize(BytesSerializationContext())
+
+        sub.merge(deep)
+        with self.assertRaises(SerializerValueError):
+            stamp.serialize(BytesSerializationContext())
+
     def test_str_tree(self):
         """Converting timestamp to tree"""
         t = Timestamp(b'')
@@ -200,6 +239,14 @@ class Test_DetachedTimestampFile(unittest.TestCase):
             with self.assertRaises(expected_error):
                 ctx = BytesDeserializationContext(serialized)
                 DetachedTimestampFile.deserialize(ctx)
+
+    def test_serialization_too_deep(self):
+        """Serializing a file past the recursion limit fails, writing nothing"""
+        stamp = DetachedTimestampFile(OpSHA256(), make_chain(b'\x00'*32, 256))
+        ctx = BytesSerializationContext()
+        with self.assertRaises(SerializerValueError):
+            stamp.serialize(ctx)
+        self.assertEqual(ctx.getbytes(), b'')
 
     def test_keccak256_is_not_a_file_hash_op(self):
         """Keccak256 can't be the file hash op of a detached timestamp"""
